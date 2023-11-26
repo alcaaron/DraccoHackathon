@@ -1,2 +1,1 @@
-# DraccoHackaton
-Grupo del hackaton.
+Programas hechos en el Hackathon Dracco.
