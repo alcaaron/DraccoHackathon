@@ -31,6 +31,9 @@
 #include <Adafruit_NeoPixel.h>
 # include <SoftwareSerial.h>
 # include <TinyGPS++.h>
+
+#include <UniversalTelegramBot.h>
+#include <WiFiClientSecure.h>
 //#include <ArduinoMqttClient.h>
 //#include <WiFiNINA.h>
 
@@ -67,6 +70,14 @@ static int fusion_ix = 3;
 static const bool debug_nn = false; // Set this to true to see e.g. features generated from the raw signal
 
 
+  const char* ssid     = "Redmi Note 8T";
+  const char* password = "tdraaron";
+  #define BOT_TOKEN "6811226934:AAFDBROB0UXVLFAxXUewVEaHD1f8k1VPrsI"
+  #define CHAT_ID "5523505509"
+
+  WiFiClientSecure client;
+  UniversalTelegramBot bot(BOT_TOKEN, client);
+  int numeroAcera = 1;
 
 /**
 * @brief      Arduino setup function
@@ -129,6 +140,9 @@ void setup()
   leds.setPixelColor(0, leds.Color(0, 0, 255));
   leds.setPixelColor(1, leds.Color(0, 0, 255));
   leds.show();
+
+  WiFi.begin(ssid,password);
+  client.setCACert(TELEGRAM_CERTIFICATE_ROOT);
 
 }
 
@@ -195,11 +209,21 @@ void loop()
     ei_printf("%s: %.5f\r\n", result.classification[ix].label, result.classification[ix].value);
   }
 
+  
+  String text[3] = {" infraccion(es) de ir por la acera, ", " infraccion(es) de velocidad y ", " infraccion(es) de ir en sentido contrario."};
+  String infracciones = "Has cometido ";
+
 #if EI_CLASSIFIER_HAS_ANOMALY == 1
   //ei_printf("EI_CLASSIFIER_RAW_SAMPLES_PER_FRAME = %d\n", EI_CLASSIFIER_RAW_SAMPLES_PER_FRAME);
   //ei_printf("EI_CLASSIFIER_DSP_INPUT_FRAME_SIZE = %d\n", EI_CLASSIFIER_DSP_INPUT_FRAME_SIZE);
   if (result.anomaly < 0.85){
     ei_printf("ACERA, con un anomaly score: %.3f\r\n", result.anomaly);
+    int infr[3] = {numeroAcera++,0,0}; 
+    for (int i = 0; i < 3; i++){
+      infracciones.concat(infr[i]);
+      infracciones.concat(text[i]);
+    }
+    bot.sendMessage(CHAT_ID, infracciones, "");
   }
   else{
     ei_printf("OTROS, con un anomaly score: %.3f\r\n", result.anomaly);
